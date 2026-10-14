@@ -1,12 +1,16 @@
 import json
+import os
+from pathlib import Path
 
 from student import Student
 
+BASE_DIR = Path(__file__).resolve().parent
+STUDENTS_FILE = BASE_DIR / "students.json"
 
 
 def load_students():
     try:
-        with open("students.json", "r") as file:
+        with open(STUDENTS_FILE, "r", encoding="utf-8") as file:
             data = json.load(file)
 
     except FileNotFoundError:
@@ -19,13 +23,17 @@ def load_students():
     students = []
 
     for item in data:
-        student = Student(
-            item["student_id"],
-            item["name"],
-            item["age"],
-            item["marks"]
-        )
-        students.append(student)
+        try:
+            student = Student(
+                item["student_id"],
+                item["name"],
+                item["age"],
+                item["marks"]
+            )
+            students.append(student)
+
+        except (KeyError, TypeError, ValueError) as error:
+            print(f"Warning: Skipping invalid student record: {error}")
 
     return students
 
@@ -41,8 +49,17 @@ def save_students(students):
             "marks": student.marks
         })
 
-    with open("students.json", "w") as file:
-        json.dump(data, file, indent=4)
+    temp_file = STUDENTS_FILE.with_suffix(".json.tmp")
 
-    print("Students saved successfully!")
+    try:
+        with open(temp_file, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
+            file.flush()
+            os.fsync(file.fileno())
 
+        os.replace(temp_file, STUDENTS_FILE)
+        print("Students saved successfully!")
+
+    except OSError as error:
+        print(f"Error saving students: {error}")
+        raise
