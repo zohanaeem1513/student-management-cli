@@ -2,6 +2,16 @@
 from storage import load_students, save_students
 from student import Student
 
+
+def safe_save_students():
+    try:
+        save_students(students)
+        return True
+    except OSError:
+        print("Error:could not save students")
+        return False
+
+
 # Load saved students when the program starts
 students = load_students()
 
@@ -13,8 +23,14 @@ def add_student(student):
             return
 
     students.append(student)
-    save_students(students)
-    print("Student added successfully!")
+    if safe_save_students(students):
+        print("Student save successfully!")
+
+    else:
+        students.remove(student)
+        print("Student was not added because saving failed")
+
+    
 
 
 def view_students():

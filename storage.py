@@ -31,6 +31,11 @@ def load_students():
                 item["marks"]
             )
             students.append(student)
+            try:
+                save_students(students)
+            except OSError:
+                students.remove(student)
+                print("Student was not saved. Please try again."  )  
 
         except (KeyError, TypeError, ValueError) as error:
             print(f"Warning: Skipping invalid student record: {error}")
